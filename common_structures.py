@@ -63,7 +63,7 @@ class GeneralDbWithTree(object):
 
         for row in self.tree_shaped_data:
             _id = row.row_id
-            new_item = SimpleStandardItem(row_id=row.row_id, text=row.text, is_obsolete=row.is_obsolete)
+            new_item = SimpleStandardItem(row_id=row.row_id, text=str(row.text), is_obsolete=row.is_obsolete)
             self.tree_items[_id] = new_item
             parent_node = self.tree_items.get(row.parent_id)
             if parent_node is None:

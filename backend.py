@@ -1,5 +1,5 @@
 import sqlite3
-import sys
+import sys, os
 from sqlite3 import Error
 import csv
 
@@ -31,7 +31,22 @@ class Backend(GeneralDbWithTree):
         self.db_con = self.sql_connection()
         self.db_cursor = self.db_con.cursor()
 
+        is_ok, msg = self.perform_db_sanity()
+        if not is_ok:
+            show_message_box(f"DB sanity failed with message: '{msg}'. Will try to recover")
+            os.remove(DB_FILE)
+            self.db_con = self.sql_connection()
+            self.db_cursor = self.db_con.cursor()
+            self.reset_items(update_tree_view=False)
+
         super().__init__(tree_view)
+
+    def perform_db_sanity(self):
+        try:
+            sum(0 for _ in self.tree_shaped_data)
+            return True, ""
+        except Exception as e:
+            return False, str(e)
 
     @staticmethod
     def sql_connection():
@@ -42,10 +57,11 @@ class Backend(GeneralDbWithTree):
             show_message_box(f"Critical error: {Error}")
             sys.exit(1)
 
-    def reset_items(self):
+    def reset_items(self, update_tree_view=True):
         self.load_geo_data_from_csv()
         self.load_tree_data_from_csv()
-        self.update_tree_view()
+        if update_tree_view:
+            self.update_tree_view()
 
     def load_tree_data_from_csv(self):
         with open(CSV_TREE_FILE, newline='') as csvfile:

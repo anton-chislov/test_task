@@ -81,12 +81,20 @@ class CacheWithTree(GeneralDbWithTree):
     def get_row_by_id(self, _id):
         return self.rows[_id]
 
+    def enforce_is_obsolete_according_to_parent_status(self, row):
+        if not row.is_obsolete:
+            parent = self.rows.get(row.parent_id, None)
+            if parent is not None:
+                row.is_obsolete = parent.is_obsolete
+
     @property
     def tree_shaped_data(self):
         tree_shaped_data = list(self.rows.values())
         heapq.heapify(tree_shaped_data)
         while tree_shaped_data:
-            yield heapq.heappop(tree_shaped_data)
+            row = heapq.heappop(tree_shaped_data)
+            self.enforce_is_obsolete_according_to_parent_status(row)
+            yield row
 
     def reset_items(self):
         self.rows = {}
